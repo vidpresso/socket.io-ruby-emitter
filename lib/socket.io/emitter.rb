@@ -17,6 +17,8 @@ module SocketIO
       @nsp = nil
       @rooms = []
       @flags = {}
+      # Random UID
+      @uid = ('a'..'z').to_a.shuffle[0,6].join
     end
 
     FLAGS.each do |flag|
@@ -38,8 +40,10 @@ module SocketIO
       packet[:data] = args
       packet[:nsp] = @nsp || '/'
 
+      key = "#{@key}##{@nsp || '/'}#"
+
       packed = MessagePack.pack([packet, { rooms: @rooms, flags: @flags }])
-      @redis.publish(@key, packed)
+      @redis.publish(key, packed)
 
       self
     end
