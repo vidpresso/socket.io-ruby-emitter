@@ -42,7 +42,7 @@ module SocketIO
 
       key = "#{@key}##{@nsp || '/'}#"
 
-      packed = MessagePack.pack([packet, { rooms: @rooms, flags: @flags }])
+      packed = MessagePack.pack([@uid, packet, { rooms: @rooms, flags: @flags }])
       @redis.publish(key, packed)
 
       self
