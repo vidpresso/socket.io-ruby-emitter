@@ -13,8 +13,8 @@ module SocketIO
 
     def initialize(options = {})
       @redis = options[:redis] || Redis.new
-      @key = "#{options[:key] || 'socket.io'}#emitter";
-      @nsp = nil
+      @key = "#{options[:key] || 'socket.io'}"
+      @nsp = "/"
       @rooms = []
       @flags = {}
     end
@@ -38,8 +38,16 @@ module SocketIO
       packet[:data] = args
       packet[:nsp] = @nsp || '/'
 
-      packed = MessagePack.pack([packet, { rooms: @rooms, flags: @flags }])
-      @redis.publish(@key, packed)
+      packed = MessagePack.pack([SecureRandom.urlsafe_base64(5), packet, { rooms: @rooms, flags: @flags }])
+      if @rooms.length > 0
+        @rooms.each do |room|
+          channel_name = "#{@key}##{@nsp}##{room}#"
+          @redis.publish(channel_name, packed)
+        end
+      else
+        channel_name = "#{@key}##{@nsp}#"
+        @redis.publish(channel_name, packed)
+      end
 
       self
     end
